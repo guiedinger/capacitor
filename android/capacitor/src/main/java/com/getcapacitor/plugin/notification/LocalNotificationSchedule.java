@@ -1,9 +1,7 @@
 package com.getcapacitor.plugin.notification;
 
 import android.text.format.DateUtils;
-
 import com.getcapacitor.JSObject;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -20,6 +18,9 @@ public class LocalNotificationSchedule {
 
   private DateMatch on;
 
+  private Boolean whileIdle;
+
+  private JSObject scheduleObj;
 
   public LocalNotificationSchedule(JSObject jsonNotification) throws ParseException {
     JSObject schedule = jsonNotification.getJSObject("schedule");
@@ -33,6 +34,8 @@ public class LocalNotificationSchedule {
       // Build on - recurring times. For e.g. every 1st day of the month at 8:30.
       buildOnElement(schedule);
     }
+    // Schedule this notification to fire even if app is idled (Doze)
+    this.whileIdle = schedule.getBoolean("allowWhileIdle", false);
   }
 
   public LocalNotificationSchedule() {
@@ -73,6 +76,10 @@ public class LocalNotificationSchedule {
     return on;
   }
 
+  public JSObject getOnObj() {
+    return this.scheduleObj.getJSObject("on");
+  }
+
   public void setOn(DateMatch on) {
     this.on = on;
   }
@@ -109,6 +116,10 @@ public class LocalNotificationSchedule {
     this.count = count;
   }
 
+  public boolean allowWhileIdle() {
+    return this.whileIdle;
+  }
+
   public boolean isRepeating() {
     return Boolean.TRUE.equals(this.repeats);
   }
@@ -125,12 +136,14 @@ public class LocalNotificationSchedule {
   }
 
   /**
-   * Get constant long value representing specific interval of time (weeks, days etc.)
+   * Get constant long value representing specific interval of time (weeks, days
+   * etc.)
    */
   public Long getEveryInterval() {
     switch (every) {
       case "year":
-        return count * DateUtils.YEAR_IN_MILLIS;
+        // This case is just approximation as not all years have the same number of days
+        return count * DateUtils.WEEK_IN_MILLIS * 52;
       case "month":
         // This case is just approximation as months have different number of days
         return count * 30 * DateUtils.DAY_IN_MILLIS;
@@ -160,5 +173,4 @@ public class LocalNotificationSchedule {
   public Long getNextOnSchedule(Date currentTime) {
     return this.on.nextTrigger(currentTime);
   }
-
 }
