@@ -375,7 +375,7 @@ public class Bridge {
     settings.setDomStorageEnabled(true);
     settings.setGeolocationEnabled(true);
     settings.setDatabaseEnabled(true);
-    settings.setAppCacheEnabled(true);
+    //settings.setAppCacheEnabled(true);
     settings.setMediaPlaybackRequiresUserGesture(false);
     settings.setJavaScriptCanOpenWindowsAutomatically(true);
     if (this.config.getBoolean("android.allowMixedContent", false)) {
