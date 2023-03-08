@@ -1,13 +1,18 @@
 package com.getcapacitor;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.webkit.WebView;
 
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.core.content.ContextCompat;
 
 import com.getcapacitor.android.R;
 import com.getcapacitor.cordova.MockCordovaInterfaceImpl;
@@ -124,6 +129,7 @@ public class BridgeActivity extends AppCompatActivity {
 
     this.bridge.onStart();
     mockWebView.handleStart();
+    askNotificationPermission();
 
     Logger.debug("App started");
   }
@@ -200,6 +206,7 @@ public class BridgeActivity extends AppCompatActivity {
 
   @Override
   public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     if (this.bridge == null) {
       return;
     }
@@ -209,6 +216,7 @@ public class BridgeActivity extends AppCompatActivity {
 
   @Override
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
     if (this.bridge == null) {
       return;
     }
@@ -217,6 +225,7 @@ public class BridgeActivity extends AppCompatActivity {
 
   @Override
   protected void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
     if (this.bridge == null || intent == null) {
       return;
     }
@@ -242,30 +251,31 @@ public class BridgeActivity extends AppCompatActivity {
     pluginEntries = parser.getPluginEntries();
   }
 
-  // Declare the launcher at the top of your Activity/Fragment:
+// Declare the launcher at the top of your Activity/Fragment:
   private final ActivityResultLauncher<String> requestPermissionLauncher =
-          registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-              if (isGranted) {
-                  // FCM SDK (and your app) can post notifications.
-              } else {
-                  // TODO: Inform user that that your app will not show notifications.
-              }
-          });
+    registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+    });
 
   private void askNotificationPermission() {
       // This is only necessary for API level >= 33 (TIRAMISU)
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-          if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+      if (Build.VERSION.SDK_INT >= 33) {
+          if (ContextCompat.checkSelfPermission(this, "android.permission.POST_NOTIFICATIONS") ==
                   PackageManager.PERMISSION_GRANTED) {
               // FCM SDK (and your app) can post notifications.
-          } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
-              // TODO: display an educational UI explaining to the user the features that will be enabled
-              //       by them granting the POST_NOTIFICATION permission. This UI should provide the user
-              //       "OK" and "No thanks" buttons. If the user selects "OK," directly request the permission.
-              //       If the user selects "No thanks," allow the user to continue without notifications.
-          } else {
-              // Directly ask for the permission
-              requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+          } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (shouldShowRequestPermissionRationale("android.permission.POST_NOTIFICATIONS")) {
+                // TODO: display an educational UI explaining to the user the features that will be enabled
+                //       by them granting the POST_NOTIFICATION permission. This UI should provide the user
+                //       "OK" and "No thanks" buttons. If the user selects "OK," directly request the permission.
+                //       If the user selects "No thanks," allow the user to continue without notifications.
+            } else {
+                // Directly ask for the permission
+                requestPermissionLauncher.launch("android.permission.POST_NOTIFICATIONS");
+            }
+          }
+          else {
+            // Directly ask for the permission
+            requestPermissionLauncher.launch("android.permission.POST_NOTIFICATIONS");
           }
       }
   }
